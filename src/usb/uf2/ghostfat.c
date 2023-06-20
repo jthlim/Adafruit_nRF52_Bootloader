@@ -224,7 +224,8 @@ static inline bool is_uf2_block (UF2_Block const *bl)
 // used when upgrading application
 static inline bool in_app_space (uint32_t addr)
 {
-  return USER_FLASH_START <= addr && addr < USER_FLASH_END;
+  return (USER_FLASH_START <= addr && addr < USER_FLASH_END) ||
+         (0x12000000 <= addr && addr < 0x20000000);
 }
 
 // used when upgrading bootloader

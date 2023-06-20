@@ -81,6 +81,7 @@ void QspiWrite(size_t flashOffset, const void *data, size_t length) {
   NRF_QSPI->TASKS_WRITESTART = 1;
 
   QspiWaitForCommandCompletion();
+  QspiWaitForFlashBusyCompletion();
 }
 
 void QspiInitializePin(int pin) {

@@ -279,6 +279,7 @@ void uf2_init(void)
   {
     strcat(infoUf2File, "not found\r\n");
   }
+  strcat(infoUf2File, "Javelin QSPI extensions\r\n");
 }
 
 /*------------------------------------------------------------------*/

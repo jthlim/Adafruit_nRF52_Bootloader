@@ -179,6 +179,7 @@ int main(void)
   bootloader_init();
 
   PRINTF("Bootloader Start\r\n");
+  flash_init_qspi();
 
   led_state(STATE_BOOTLOADER_STARTED);
 

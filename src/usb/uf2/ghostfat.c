@@ -91,7 +91,7 @@ struct TextFile {
 //--------------------------------------------------------------------+
 
 #define BPB_SECTOR_SIZE           ( 512)
-#define BPB_SECTORS_PER_CLUSTER   (   1)
+#define BPB_SECTORS_PER_CLUSTER   (   4)
 #define BPB_RESERVED_SECTORS      (   1)
 #define BPB_NUMBER_OF_FATS        (   2)
 #define BPB_ROOT_DIR_ENTRIES      (  64)
@@ -106,7 +106,6 @@ struct TextFile {
 #define ROOT_DIR_SECTOR_COUNT     (BPB_ROOT_DIR_ENTRIES/DIRENTRIES_PER_SECTOR)
 
 STATIC_ASSERT(BPB_SECTOR_SIZE                              ==       512); // GhostFAT does not support other sector sizes (currently)
-STATIC_ASSERT(BPB_SECTORS_PER_CLUSTER                      ==         1); // GhostFAT presumes one sector == one cluster (for simplicity)
 STATIC_ASSERT(BPB_NUMBER_OF_FATS                           ==         2); // FAT highest compatibility
 STATIC_ASSERT(sizeof(DirEntry)                             ==        32); // FAT requirement
 STATIC_ASSERT(BPB_SECTOR_SIZE % sizeof(DirEntry)           ==         0); // FAT requirement

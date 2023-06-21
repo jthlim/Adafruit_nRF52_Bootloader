@@ -24,6 +24,7 @@
 
 #include "flash_nrf5x.h"
 #include "boards.h"
+#include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_qspi.h"
 #include "nrf_sdm.h"
@@ -234,6 +235,8 @@ void flash_init_qspi() {
                NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
                NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
   nrf_gpio_pin_set(JAVELIN_QSPI_CSN_PIN);
+
+  nrf_delay_us(1000);
 
   QspiActivate();
 }

@@ -1,8 +1,8 @@
 #include "boards.h"
 #include "dfu_types.h"
 
-// Virtual disk size: just under 32MB
-#define CFG_UF2_NUM_BLOCKS            0x10109
+// Virtual disk size: just over 128MB
+#define CFG_UF2_NUM_BLOCKS            0x40109
 
 // Family ID for updating Bootloader
 #define CFG_UF2_FAMILY_BOOT_ID        0xd663823c

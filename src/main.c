@@ -199,6 +199,7 @@ int main(void)
   check_dfu_mode();
 
   // Reset peripherals
+  flash_shutdown_qspi();
   board_teardown();
 
   /* Jump to application if valid

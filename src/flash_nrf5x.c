@@ -241,4 +241,36 @@ void flash_init_qspi() {
   QspiActivate();
 }
 
+void QspiDeactivatePin(int pin) {
+  if (pin == NRF_QSPI_PIN_NOT_CONNECTED) {
+    return;
+  }
+
+  nrf_gpio_cfg_default(pin);
+}
+
+void flash_shutdown_qspi() {
+  NRF_QSPI->TASKS_DEACTIVATE = 1;
+
+  // Workaround for nRF52840 anomaly 122: Current consumption is too high.
+  *(volatile uint32_t *)0x40029054ul = 1ul;
+
+  NRF_QSPI->ENABLE = (QSPI_ENABLE_ENABLE_Disabled << QSPI_ENABLE_ENABLE_Pos);
+
+  nrf_gpio_cfg(JAVELIN_QSPI_CSN_PIN, NRF_GPIO_PIN_DIR_OUTPUT,
+               NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
+               NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
+
+#if defined(JAVELIN_QSPI_POWER_PIN)
+  nrf_gpio_cfg_default(JAVELIN_QSPI_POWER_PIN);
+#endif
+
+  QspiDeactivatePin(JAVELIN_QSPI_CSN_PIN);
+  QspiDeactivatePin(JAVELIN_QSPI_SCK_PIN);
+  QspiDeactivatePin(JAVELIN_QSPI_IO0_PIN);
+  QspiDeactivatePin(JAVELIN_QSPI_IO1_PIN);
+  QspiDeactivatePin(JAVELIN_QSPI_IO2_PIN);
+  QspiDeactivatePin(JAVELIN_QSPI_IO3_PIN);
+}
+
 //---------------------------------------------------------------------------

@@ -35,6 +35,7 @@
 #endif
 
 void flash_init_qspi ();
+void flash_shutdown_qspi ();
 void flash_nrf5x_write (uint32_t dst, void const *src, int len, bool need_erase);
 void flash_nrf5x_flush (bool need_erase);
 

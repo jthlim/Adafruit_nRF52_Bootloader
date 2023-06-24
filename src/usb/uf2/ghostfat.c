@@ -91,7 +91,7 @@ struct TextFile {
 //--------------------------------------------------------------------+
 
 #define BPB_SECTOR_SIZE           ( 512)
-#define BPB_SECTORS_PER_CLUSTER   (   4)
+#define BPB_SECTORS_PER_CLUSTER   (   8)
 #define BPB_RESERVED_SECTORS      (   1)
 #define BPB_NUMBER_OF_FATS        (   2)
 #define BPB_ROOT_DIR_ENTRIES      (  64)
@@ -100,8 +100,8 @@ struct TextFile {
 #define FAT_ENTRY_SIZE            (2)
 #define FAT_ENTRIES_PER_SECTOR    (BPB_SECTOR_SIZE / FAT_ENTRY_SIZE)
 // NOTE: MS specification explicitly allows FAT to be larger than necessary
-#define BPB_SECTORS_PER_FAT       ( (BPB_TOTAL_SECTORS / FAT_ENTRIES_PER_SECTOR) + \
-                                   ((BPB_TOTAL_SECTORS % FAT_ENTRIES_PER_SECTOR) ? 1 : 0))
+#define BPB_SECTORS_PER_FAT       ( (BPB_TOTAL_SECTORS / (FAT_ENTRIES_PER_SECTOR * BPB_SECTORS_PER_CLUSTER)) + \
+                                   ((BPB_TOTAL_SECTORS % (FAT_ENTRIES_PER_SECTOR * BPB_SECTORS_PER_CLUSTER)) ? 1 : 0))
 #define DIRENTRIES_PER_SECTOR     (BPB_SECTOR_SIZE/sizeof(DirEntry))
 #define ROOT_DIR_SECTOR_COUNT     (BPB_ROOT_DIR_ENTRIES/DIRENTRIES_PER_SECTOR)
 
@@ -174,6 +174,9 @@ STATIC_ASSERT(UF2_SECTORS == ((UF2_SIZE/2) / 256)); // Not a requirement ... ens
 
 #define UF2_FIRST_SECTOR   ((NUM_FILES + 1) * BPB_SECTORS_PER_CLUSTER) // WARNING -- code presumes each non-UF2 file content fits in single sector
 #define UF2_LAST_SECTOR    ((UF2_FIRST_SECTOR + UF2_SECTORS - 1) * BPB_SECTORS_PER_CLUSTER)
+
+#define UF2_FIRST_CLUSTER  (NUM_FILES + 1) // WARNING -- code presumes each non-UF2 file content fits in single sector
+#define UF2_LAST_CLUSTER   (UF2_FIRST_CLUSTER + UF2_SECTORS - 1)
 
 #define FS_START_FAT0_SECTOR      BPB_RESERVED_SECTORS
 #define FS_START_FAT1_SECTOR      (FS_START_FAT0_SECTOR + BPB_SECTORS_PER_FAT)
@@ -326,8 +329,8 @@ void read_block(uint32_t block_no, uint8_t *data) {
         }
         for (uint32_t i = 0; i < FAT_ENTRIES_PER_SECTOR; ++i) { // Generate the FAT chain for the firmware "file"
             uint32_t v = (sectionIdx * FAT_ENTRIES_PER_SECTOR) + i;
-            if (UF2_FIRST_SECTOR <= v && v <= UF2_LAST_SECTOR)
-                ((uint16_t *)(void *)data)[i] = v == UF2_LAST_SECTOR ? 0xffff : v + 1;
+            if (UF2_FIRST_CLUSTER <= v && v <= UF2_LAST_CLUSTER)
+                ((uint16_t *)(void *)data)[i] = v == UF2_LAST_CLUSTER ? 0xffff : v + 1;
         }
     } else if (block_no < FS_START_CLUSTERS_SECTOR) { // Requested root directory sector
 
@@ -366,18 +369,18 @@ void read_block(uint32_t block_no, uint8_t *data) {
 
     } else if (block_no < BPB_TOTAL_SECTORS) {
 
-        sectionIdx -= FS_START_CLUSTERS_SECTOR;
-        if (sectionIdx < NUM_FILES - 1) {
-            memcpy(data, info[sectionIdx].content, strlen(info[sectionIdx].content));
+        uint32_t fileIdx = (sectionIdx - FS_START_CLUSTERS_SECTOR) / BPB_SECTORS_PER_CLUSTER;
+        if (fileIdx < NUM_FILES - 1) {
+            memcpy(data, info[fileIdx].content, strlen(info[fileIdx].content));
         } else { // generate the UF2 file data on-the-fly
-            sectionIdx -= NUM_FILES - 1;
-            uint32_t addr = USER_FLASH_START + (sectionIdx * UF2_FIRMWARE_BYTES_PER_SECTOR);
+            uint32_t flashBlockIdx = sectionIdx - FS_START_CLUSTERS_SECTOR - (NUM_FILES - 1);
+            uint32_t addr = USER_FLASH_START + (flashBlockIdx * UF2_FIRMWARE_BYTES_PER_SECTOR);
             if (addr < CFG_UF2_FLASH_SIZE) {
                 UF2_Block *bl = (void *)data;
                 bl->magicStart0 = UF2_MAGIC_START0;
                 bl->magicStart1 = UF2_MAGIC_START1;
                 bl->magicEnd = UF2_MAGIC_END;
-                bl->blockNo = sectionIdx;
+                bl->blockNo = flashBlockIdx;
                 bl->numBlocks = UF2_SECTORS;
                 bl->targetAddr = addr;
                 bl->payloadSize = UF2_FIRMWARE_BYTES_PER_SECTOR;

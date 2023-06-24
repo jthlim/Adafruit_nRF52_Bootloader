@@ -2,7 +2,7 @@
 #include "dfu_types.h"
 
 // Virtual disk size: Need 128MB for UF2 + space for MBR, FAT + Root directory.
-#define CFG_UF2_NUM_BLOCKS            0x44000
+#define CFG_UF2_NUM_BLOCKS            0x48000
 
 // Family ID for updating Bootloader
 #define CFG_UF2_FAMILY_BOOT_ID        0xd663823c

@@ -114,7 +114,6 @@ void StartQspi() {
 
   NRF_QSPI->XIPOFFSET = 0;
   NRF_QSPI->IFCONFIG0 =
-      (QSPI_IFCONFIG0_DPMENABLE_Enable << QSPI_IFCONFIG0_DPMENABLE_Pos) |
 #if JAVELIN_QSPI_32_BIT_ADDRESSING
       (QSPI_IFCONFIG0_ADDRMODE_32BIT << QSPI_IFCONFIG0_ADDRMODE_Pos) |
 #endif
@@ -124,7 +123,6 @@ void StartQspi() {
   NRF_QSPI->IFCONFIG1 =
       (JAVELIN_QSPI_SCK_FREQ << QSPI_IFCONFIG1_SCKFREQ_Pos) |
       (QSPI_IFCONFIG1_SPIMODE_MODE0 << QSPI_IFCONFIG1_SPIMODE_Pos) |
-      (QSPI_IFCONFIG0_DPMENABLE_Disable << QSPI_IFCONFIG0_DPMENABLE_Pos) |
       (1 << QSPI_IFCONFIG1_SCKDELAY_Pos);
 
 #if JAVELIN_QSPI_32_BIT_ADDRESSING
@@ -134,8 +132,6 @@ void StartQspi() {
       (QSPI_ADDRCONF_MODE_Opcode << QSPI_ADDRCONF_MODE_Pos) |
       (0xb7 << QSPI_ADDRCONF_OPCODE_Pos);
 #endif
-
-  // NRF_QSPI->DPMDUR = 0x10001;
 
   NRF_QSPI->ENABLE = (QSPI_ENABLE_ENABLE_Enabled << QSPI_ENABLE_ENABLE_Pos);
 
@@ -183,9 +179,9 @@ void QspiActivate() {
   // } while (!isHfclkRunning);
 }
 
-void flash_nrf5x_flush (bool need_erase)
-{
-  if ( _fl_addr == FLASH_CACHE_INVALID_ADDR ) return;
+void flash_nrf5x_flush(bool need_erase) {
+  if (_fl_addr == FLASH_CACHE_INVALID_ADDR)
+    return;
 
   // skip the write if contents matches
   if (memcmp(_fl_buf, (void *)_fl_addr, FLASH_PAGE_SIZE) != 0) {
@@ -213,15 +209,14 @@ void flash_nrf5x_flush (bool need_erase)
   _fl_addr = FLASH_CACHE_INVALID_ADDR;
 }
 
-void flash_nrf5x_write (uint32_t dst, void const *src, int len, bool need_erase)
-{
+void flash_nrf5x_write(uint32_t dst, void const *src, int len,
+                       bool need_erase) {
   uint32_t newAddr = dst & ~(FLASH_PAGE_SIZE - 1);
 
-  if ( newAddr != _fl_addr )
-  {
+  if (newAddr != _fl_addr) {
     flash_nrf5x_flush(need_erase);
     _fl_addr = newAddr;
-    memcpy(_fl_buf, (void *) newAddr, FLASH_PAGE_SIZE);
+    memcpy(_fl_buf, (void *)newAddr, FLASH_PAGE_SIZE);
   }
   memcpy(_fl_buf + (dst & (FLASH_PAGE_SIZE - 1)), src, len);
 }

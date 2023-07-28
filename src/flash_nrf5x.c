@@ -127,10 +127,10 @@ void StartQspi() {
 
 #if JAVELIN_QSPI_32_BIT_ADDRESSING
   NRF_QSPI->ADDRCONF =
-      (QSPI_ADDRCONF_WREN_Enable << QSPI_ADDRCONF_WREN_Pos) |
-      (QSPI_ADDRCONF_WIPWAIT_Enable << QSPI_ADDRCONF_WIPWAIT_Pos) |
+      (QSPI_ADDRCONF_WREN_Disable << QSPI_ADDRCONF_WREN_Pos) |
+      (QSPI_ADDRCONF_WIPWAIT_Disable << QSPI_ADDRCONF_WIPWAIT_Pos) |
       (QSPI_ADDRCONF_MODE_Opcode << QSPI_ADDRCONF_MODE_Pos) |
-      (0xb7 << QSPI_ADDRCONF_OPCODE_Pos);
+      (JAVELIN_QSPI_32_BIT_ADDRESSING_OPCODE << QSPI_ADDRCONF_OPCODE_Pos);
 #endif
 
   NRF_QSPI->ENABLE = (QSPI_ENABLE_ENABLE_Enabled << QSPI_ENABLE_ENABLE_Pos);
@@ -141,43 +141,7 @@ void StartQspi() {
   QspiWaitForCommandCompletion();
 }
 
-void QspiConfigureMemory() {
-  const int QSPI_STD_CMD_RSTEN = 0x66;
-  const int QSPI_STD_CMD_RST = 0x99;
-
-  NRF_QSPI->CINSTRCONF =
-      (QSPI_STD_CMD_RSTEN << QSPI_CINSTRCONF_OPCODE_Pos) |
-      (QSPI_CINSTRCONF_LENGTH_1B << QSPI_CINSTRCONF_LENGTH_Pos) |
-      QSPI_CINSTRCONF_WIPWAIT_Msk | QSPI_CINSTRCONF_WREN_Msk;
-  QspiWaitForCommandCompletion();
-
-  NRF_QSPI->CINSTRCONF =
-      (QSPI_STD_CMD_RST << QSPI_CINSTRCONF_OPCODE_Pos) |
-      (QSPI_CINSTRCONF_LENGTH_1B << QSPI_CINSTRCONF_LENGTH_Pos) |
-      QSPI_CINSTRCONF_WIPWAIT_Msk | QSPI_CINSTRCONF_WREN_Msk;
-  QspiWaitForCommandCompletion();
-
-#if JAVELIN_QSPI_32_BIT_ADDRESSING &&                                          \
-    defined(JAVELIN_QSPI_32_BIT_ADDRESSING_OPCODE)
-  // Enable 4 byte mode.
-  NRF_QSPI->CINSTRCONF =
-      (JAVELIN_QSPI_32_BIT_ADDRESSING_OPCODE << QSPI_CINSTRCONF_OPCODE_Pos) |
-      (QSPI_CINSTRCONF_LENGTH_1B << QSPI_CINSTRCONF_LENGTH_Pos) |
-      QSPI_CINSTRCONF_WIPWAIT_Msk | QSPI_CINSTRCONF_WREN_Msk;
-  QspiWaitForCommandCompletion();
-#endif
-}
-
-void QspiActivate() {
-  StartQspi();
-  QspiConfigureMemory();
-
-  // sd_clock_hfclk_request();
-  // uint32_t isHfclkRunning = 0;
-  // do {
-  //   sd_clock_hfclk_is_running(&isHfclkRunning);
-  // } while (!isHfclkRunning);
-}
+void QspiActivate() { StartQspi(); }
 
 void flash_nrf5x_flush(bool need_erase) {
   if (_fl_addr == FLASH_CACHE_INVALID_ADDR)
@@ -222,6 +186,8 @@ void flash_nrf5x_write(uint32_t dst, void const *src, int len,
 }
 
 void flash_init_qspi() {
+  nrf_delay_us(1000);
+
   nrf_gpio_cfg(JAVELIN_QSPI_POWER_PIN, NRF_GPIO_PIN_DIR_OUTPUT,
                NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
                NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);

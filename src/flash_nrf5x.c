@@ -69,6 +69,7 @@ void QspiErase(size_t flashOffset, size_t length) {
       flashOffset += 0x1000;
       length -= 0x1000;
     }
+    NRF_QSPI->EVENTS_READY = 0;
     NRF_QSPI->TASKS_ERASESTART = 1;
     QspiWaitForCommandCompletion();
     QspiWaitForFlashBusyCompletion();
@@ -79,6 +80,7 @@ void QspiWrite(size_t flashOffset, const void *data, size_t length) {
   NRF_QSPI->WRITE.DST = flashOffset;
   NRF_QSPI->WRITE.SRC = (size_t)data;
   NRF_QSPI->WRITE.CNT = length;
+  NRF_QSPI->EVENTS_READY = 0;
   NRF_QSPI->TASKS_WRITESTART = 1;
 
   QspiWaitForCommandCompletion();
@@ -137,8 +139,6 @@ void StartQspi() {
 
   NRF_QSPI->EVENTS_READY = 0;
   NRF_QSPI->TASKS_ACTIVATE = 1;
-
-  QspiWaitForCommandCompletion();
 }
 
 void QspiActivate() { StartQspi(); }

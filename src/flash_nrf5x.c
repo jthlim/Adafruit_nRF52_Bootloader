@@ -96,6 +96,8 @@ void QspiInitializePin(int pin) {
                NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
 }
 
+#if defined(JAVELIN_QSPI_SCK_PIN)
+
 void StartQspi() {
   nrf_gpio_cfg_output(JAVELIN_QSPI_SCK_PIN);
   nrf_gpio_pin_clear(JAVELIN_QSPI_SCK_PIN);
@@ -142,6 +144,7 @@ void StartQspi() {
 }
 
 void QspiActivate() { StartQspi(); }
+#endif
 
 void flash_nrf5x_flush(bool need_erase) {
   if (_fl_addr == FLASH_CACHE_INVALID_ADDR)
@@ -186,6 +189,7 @@ void flash_nrf5x_write(uint32_t dst, void const *src, int len,
 }
 
 void flash_init_qspi() {
+#if defined(JAVELIN_QSPI_SCK_PIN)
   nrf_delay_us(1000);
 
   nrf_gpio_cfg(JAVELIN_QSPI_POWER_PIN, NRF_GPIO_PIN_DIR_OUTPUT,
@@ -200,6 +204,7 @@ void flash_init_qspi() {
   nrf_delay_us(1000);
 
   QspiActivate();
+#endif
 }
 
 void QspiDeactivatePin(int pin) {
@@ -211,6 +216,7 @@ void QspiDeactivatePin(int pin) {
 }
 
 void flash_shutdown_qspi() {
+#if defined(JAVELIN_QSPI_SCK_PIN)
   NRF_QSPI->TASKS_DEACTIVATE = 1;
 
   // Workaround for nRF52840 anomaly 122: Current consumption is too high.
@@ -232,6 +238,7 @@ void flash_shutdown_qspi() {
   QspiDeactivatePin(JAVELIN_QSPI_IO1_PIN);
   QspiDeactivatePin(JAVELIN_QSPI_IO2_PIN);
   QspiDeactivatePin(JAVELIN_QSPI_IO3_PIN);
+#endif
 }
 
 //---------------------------------------------------------------------------

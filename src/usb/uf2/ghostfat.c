@@ -283,7 +283,10 @@ void uf2_init(void)
     strcat(infoUf2File, "not found\r\n");
   }
 #if defined(JAVELIN_QSPI_SCK_PIN)
-  strcat(infoUf2File, "Javelin QSPI extensions\r\n");
+  strcat(infoUf2File, "Javelin QSPI\r\n");
+#endif
+#if defined(JAVELIN_SECURE_STORAGE)
+  strcat(infoUf2File, "Javelin secure storage\r\n");
 #endif
 }
 

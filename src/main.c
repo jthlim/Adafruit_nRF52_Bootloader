@@ -181,7 +181,7 @@ int main(void)
   PRINTF("Bootloader Start\r\n");
   flash_init_qspi();
 
-#if JAVELIN_SECURE_STORAGE
+#if defined(JAVELIN_SECURE_STORAGE)
   flash_set_up_secure_storage();
 #endif
 

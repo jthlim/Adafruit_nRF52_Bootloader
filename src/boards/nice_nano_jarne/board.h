@@ -62,6 +62,8 @@
 #define UF2_BOARD_ID      "nRF52840-nicenano"
 #define UF2_INDEX_URL     "https://nicekeyboards.com/docs/nice-nano"
 
+#define JAVELIN_SECURE_STORAGE 1
+
 #define JAVELIN_QSPI_SCK_PIN 20
 #define JAVELIN_QSPI_CSN_PIN 22
 #define JAVELIN_QSPI_IO0_PIN 17

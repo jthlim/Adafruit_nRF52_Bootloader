@@ -62,6 +62,8 @@
 #define UF2_BOARD_ID "nRF52840-jarne-left"
 #define UF2_INDEX_URL "https://lim.au"
 
+#define JAVELIN_SECURE_STORAGE 1
+
 #define JAVELIN_QSPI_SCK_PIN 12
 #define JAVELIN_QSPI_CSN_PIN 5
 #define JAVELIN_QSPI_IO0_PIN 41

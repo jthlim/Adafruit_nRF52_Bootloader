@@ -241,4 +241,93 @@ void flash_shutdown_qspi() {
 #endif
 }
 
+typedef struct {
+  uint32_t kdr[4];
+  uint32_t hash;
+  uint32_t counter;
+} SecureStorage;
+
+static SecureStorage *const SECURE_STORAGE = (SecureStorage *)0xf0000;
+
+static uint32_t crc32(const void *data, size_t length) {
+  const uint32_t POLY = 0xedb88320;
+  const uint8_t *p = (const uint8_t *)data;
+
+  uint32_t crc = ~0;
+  while (length--) {
+    crc ^= *p++;
+    for (int k = 0; k < 8; k++) {
+      crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+    }
+  }
+  return ~crc;
+}
+
+static bool is_secure_storage_valid() {
+  return crc32(SECURE_STORAGE->kdr, sizeof(SECURE_STORAGE->kdr)) ==
+         SECURE_STORAGE->hash;
+}
+
+static void write_new_secure_storage() {
+  static uint8_t buffer[4096];
+  SecureStorage *storage = (SecureStorage *)buffer;
+
+  NRF_RNG->SHORTS = 1;
+  for (size_t i = 0; i < sizeof(storage->kdr); ++i) {
+    NRF_RNG->EVENTS_VALRDY = 0;
+    NRF_RNG->TASKS_START = 1;
+    while (!NRF_RNG->EVENTS_VALRDY) {
+    }
+    ((uint8_t *)storage->kdr)[i] = NRF_RNG->VALUE;
+  }
+  NRF_RNG->SHORTS = 0;
+
+  storage->hash = crc32(storage->kdr, sizeof(storage->kdr));
+  storage->counter = SECURE_STORAGE->counter + 1;
+
+  nrfx_nvmc_page_erase((size_t)SECURE_STORAGE);
+  nrfx_nvmc_words_write((size_t)SECURE_STORAGE, (uint32_t *)buffer,
+                        FLASH_PAGE_SIZE / 4);
+
+  // Don't leave the key hanging around.
+  memset(storage, 0, sizeof(storage));
+}
+
+void protect_flash_from_reads_and_writes(int aclIndex, const void *address,
+                                         size_t size) {
+  NRF_ACL->ACL[aclIndex].ADDR = (size_t)address;
+  NRF_ACL->ACL[aclIndex].SIZE = size;
+  NRF_ACL->ACL[aclIndex].PERM = 6;
+}
+
+void protect_flash_from_writes(int aclIndex, const void *address, size_t size) {
+  NRF_ACL->ACL[aclIndex].ADDR = (size_t)address;
+  NRF_ACL->ACL[aclIndex].SIZE = size;
+  NRF_ACL->ACL[aclIndex].PERM = 2;
+}
+
+static void load_secure_storage_to_device_root() {
+  NRF_CRYPTOCELL->ENABLE = CRYPTOCELL_ENABLE_ENABLE_Msk;
+
+  do {
+    NRF_CC_HOST_RGF->HOST_IOT_LCS = 2;
+  } while (NRF_CC_HOST_RGF->HOST_IOT_LCS != 0x102);
+
+  NRF_CC_HOST_RGF->HOST_IOT_KDR0 = SECURE_STORAGE->kdr[0];
+  NRF_CC_HOST_RGF->HOST_IOT_KDR1 = SECURE_STORAGE->kdr[1];
+  NRF_CC_HOST_RGF->HOST_IOT_KDR2 = SECURE_STORAGE->kdr[2];
+  NRF_CC_HOST_RGF->HOST_IOT_KDR3 = SECURE_STORAGE->kdr[3];
+}
+
+void flash_set_up_secure_storage() {
+  if (!is_secure_storage_valid()) {
+    write_new_secure_storage();
+  }
+  load_secure_storage_to_device_root();
+
+  protect_flash_from_reads_and_writes(0, SECURE_STORAGE, 0x1000);
+  protect_flash_from_writes(1, (void *)0, 0x1000);       // Master boot record
+  protect_flash_from_writes(2, (void *)0xf4000, 0x9000); // Boot loader
+}
+
 //---------------------------------------------------------------------------

@@ -181,6 +181,10 @@ int main(void)
   PRINTF("Bootloader Start\r\n");
   flash_init_qspi();
 
+#if JAVELIN_SECURE_STORAGE
+  flash_set_up_secure_storage();
+#endif
+
   led_state(STATE_BOOTLOADER_STARTED);
 
   // When updating SoftDevice, bootloader will reset before swapping SD

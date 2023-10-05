@@ -142,7 +142,7 @@ enum { BLE_CONN_CFG_HIGH_BANDWIDTH = 1 };
 uint32_t* dbl_reset_mem = ((uint32_t*)  DFU_DBL_RESET_MEM );
 
 // true if ble, false if serial
-bool _ota_dfu = false;
+const bool _ota_dfu = false;
 bool _ota_connected = false;
 bool _sd_inited = false;
 
@@ -217,7 +217,7 @@ int main(void)
    * - jump to App reset
    */
 
-#if JAVELIN_SECURE_STORAGE
+#if defined(JAVELIN_SECURE_STORAGE)
   shutdown_signature_check();
 #endif
 
@@ -254,7 +254,7 @@ static void check_dfu_mode(void)
   _sd_inited = (gpregret == DFU_MAGIC_OTA_APPJUM);
 
   // Start Bootloader in BLE OTA mode
-  _ota_dfu = (gpregret == DFU_MAGIC_OTA_APPJUM) || (gpregret == DFU_MAGIC_OTA_RESET);
+  // _ota_dfu = (gpregret == DFU_MAGIC_OTA_APPJUM) || (gpregret == DFU_MAGIC_OTA_RESET);
 
   // Serial only mode
   bool const serial_only_dfu = (gpregret == DFU_MAGIC_SERIAL_ONLY_RESET);
@@ -278,7 +278,7 @@ static void check_dfu_mode(void)
   dfu_start = dfu_start || button_pressed(BUTTON_DFU);
 
   // DFU + FRESET are pressed --> OTA
-  _ota_dfu = _ota_dfu  || ( button_pressed(BUTTON_DFU) && button_pressed(BUTTON_FRESET) ) ;
+  // _ota_dfu = _ota_dfu  || ( button_pressed(BUTTON_DFU) && button_pressed(BUTTON_FRESET) ) ;
 
   bool const valid_app = bootloader_app_is_valid();
   bool const just_start_app = valid_app && !dfu_start && (*dbl_reset_mem) == DFU_DBL_RESET_APP;

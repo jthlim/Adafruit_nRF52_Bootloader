@@ -28,6 +28,7 @@
 
 #include "uf2.h"
 #include "configkeys.h"
+#include "signature_check.h"
 #include "flash_nrf5x.h"
 #include <string.h>
 #include <stdio.h>
@@ -414,6 +415,10 @@ int write_block (uint32_t block_no, uint8_t *data, WriteState *state)
   UF2_Block *bl = (void*) data;
 
   if ( !is_uf2_block(bl) ) return -1;
+
+  if (check_u2f_block_signature(data)) {
+    return -1;
+  }
 
   switch ( bl->familyID )
   {

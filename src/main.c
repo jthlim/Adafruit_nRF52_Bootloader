@@ -67,6 +67,8 @@
 #include "pstorage.h"
 #include "nrfx_nvmc.h"
 
+#include "signature_check.h"
+
 #ifdef NRF_USBD
 #include "uf2/uf2.h"
 #include "nrf_usbd.h"
@@ -183,6 +185,7 @@ int main(void)
 
 #if defined(JAVELIN_SECURE_STORAGE)
   flash_set_up_secure_storage();
+  init_signature_check();
 #endif
 
   led_state(STATE_BOOTLOADER_STARTED);
@@ -214,6 +217,10 @@ int main(void)
    * - jump to App reset
    */
 
+#if JAVELIN_SECURE_STORAGE
+  shutdown_signature_check();
+#endif
+
   if (bootloader_app_is_valid() && !bootloader_dfu_sd_in_progress())
   {
     PRINTF("App is valid\r\n");
@@ -230,6 +237,9 @@ int main(void)
     (*dbl_reset_mem) = 0;
 
     // start application
+#if defined(JAVELIN_SECURE_STORAGE)
+    flash_set_up_read_only_regions();
+#endif
     bootloader_app_start();
   }
 

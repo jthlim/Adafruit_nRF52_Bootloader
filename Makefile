@@ -138,6 +138,7 @@ C_SRC += \
   src/dfu_init.c \
   src/flash_nrf5x.c \
   src/main.c \
+	src/signature_check.c
 
 # all files in boards
 C_SRC += src/boards/boards.c
@@ -248,7 +249,8 @@ IPATH += \
   $(SDK_PATH)/libraries/hci/config \
   $(SDK_PATH)/libraries/uart \
   $(SDK_PATH)/libraries/hci \
-  $(SDK_PATH)/drivers_nrf/delay
+  $(SDK_PATH)/drivers_nrf/delay \
+  $(SDK_PATH)/nrf_cc310_bl/include
 
 # SoftDevice
 IPATH += \
@@ -274,7 +276,7 @@ CFLAGS += \
 	-fshort-enums \
 	-fstack-usage \
 	-fno-strict-aliasing \
-	-Wall \
+		-Wall \
 	-Wextra \
 	-Werror \
 	-Wfatal-errors \
@@ -350,9 +352,10 @@ LDFLAGS += \
 	$(CFLAGS) \
 	-Wl,-L,linker -Wl,-T,$(LD_FILE) \
 	-Wl,-Map=$@.map -Wl,-cref -Wl,-gc-sections \
-	-specs=nosys.specs -specs=nano.specs
+	-specs=nosys.specs -specs=nano.specs \
+	-L $(SDK_PATH)/nrf_cc310_bl/lib/cortex-m4/hard-float/no-interrupts
 
-LIBS += -lm -lc
+LIBS += -lm -lc -lnrf_cc310_bl_0.9.13
 
 #------------------------------------------------------------------------------
 # Assembler flags

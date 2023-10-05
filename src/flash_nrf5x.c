@@ -319,6 +319,23 @@ static void load_secure_storage_to_device_root() {
   NRF_CC_HOST_RGF->HOST_IOT_KDR3 = SECURE_STORAGE->kdr[3];
 }
 
+void disable_debugger() {
+  if ((NRF_UICR->APPROTECT & UICR_APPROTECT_PALL_Msk) !=
+      (UICR_APPROTECT_PALL_Enabled << UICR_APPROTECT_PALL_Pos)) {
+    NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Wen << NVMC_CONFIG_WEN_Pos;
+    while (NRF_NVMC->READY == NVMC_READY_READY_Busy) {
+    }
+    NRF_UICR->APPROTECT =
+        (UICR_APPROTECT_PALL_Enabled << UICR_APPROTECT_PALL_Pos);
+    while (NRF_NVMC->READY == NVMC_READY_READY_Busy) {
+    }
+    NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Ren << NVMC_CONFIG_WEN_Pos;
+    while (NRF_NVMC->READY == NVMC_READY_READY_Busy) {
+    }
+    NVIC_SystemReset();
+  }
+}
+
 void flash_set_up_secure_storage() {
   if (!is_secure_storage_valid()) {
     write_new_secure_storage();
@@ -326,6 +343,11 @@ void flash_set_up_secure_storage() {
   load_secure_storage_to_device_root();
 
   protect_flash_from_reads_and_writes(0, SECURE_STORAGE, 0x1000);
+
+  disable_debugger();
+}
+
+void flash_set_up_read_only_regions() {
   protect_flash_from_writes(1, (void *)0, 0x1000);       // Master boot record
   protect_flash_from_writes(2, (void *)0xf4000, 0x9000); // Boot loader
 }

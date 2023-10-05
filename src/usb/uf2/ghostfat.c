@@ -416,9 +416,11 @@ int write_block (uint32_t block_no, uint8_t *data, WriteState *state)
 
   if ( !is_uf2_block(bl) ) return -1;
 
+#if defined(JAVELIN_SECURE_STORAGE)
   if (check_u2f_block_signature(data)) {
     return -1;
   }
+#endif
 
   switch ( bl->familyID )
   {

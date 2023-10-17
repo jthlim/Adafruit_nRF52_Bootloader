@@ -168,6 +168,10 @@ static void mbr_init_sd(void)
 //--------------------------------------------------------------------+
 int main(void)
 {
+#if defined(JAVELIN_SECURE_STORAGE)
+  disable_debugger();
+#endif
+
   // Populate Boot Address and MBR Param into MBR if not already
   // MBR_BOOTLOADER_ADDR/MBR_PARAM_PAGE_ADDR are used if available, else UICR registers are used
   // Note: skip it for now since this will prevent us to change the size of bootloader in the future

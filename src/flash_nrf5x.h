@@ -34,6 +34,8 @@
  extern "C" {
 #endif
 
+void disable_debugger();
+
 void flash_init_qspi ();
 void flash_shutdown_qspi ();
 void flash_nrf5x_write (uint32_t dst, void const *src, int len, bool need_erase);

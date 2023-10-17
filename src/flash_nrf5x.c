@@ -343,8 +343,6 @@ void flash_set_up_secure_storage() {
   load_secure_storage_to_device_root();
 
   protect_flash_from_reads_and_writes(0, SECURE_STORAGE, 0x1000);
-
-  disable_debugger();
 }
 
 void flash_set_up_read_only_regions() {
